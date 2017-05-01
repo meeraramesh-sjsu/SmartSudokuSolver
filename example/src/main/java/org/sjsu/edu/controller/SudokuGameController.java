@@ -65,23 +65,13 @@ public String saveRegisterDeviceInfo(@RequestBody String newUser) throws Excepti
 			whereQuery.put("_id", emailid);							// check the specific id
 			DBCursor cursor = collection.find(whereQuery);		
 			if(cursor.size() > 0) {
-				String rowval = cursor.next().toString();
-				JSONObject jsoObject = new JSONObject(rowval);
-				JSONArray jsonArray = jsoObject.getJSONArray("tokens");
-				for(int i=0;i<jsonArray.length();i++) {
-					tokens.add(jsonArray.getString(i));
+				return "Already registered, de-register first";
 			}
-			/*if(jsonArray.length()==0) {
-				updateQuery.append("$set", new BasicDBObject().append("paymentplan", paymentplan).append("amount",amount).append("name",name));
-				BasicDBObject where = new BasicDBObject("_id",emailid);
-				
-			}*/
-			}
-			else {
-			basicDBObject.append("_id", emailid).append("name", name).append("amount", amount).append("paymentplan", paymentplan).append("amount", amount);
-			collection.insert(basicDBObject);
 			tokens = generateTokens(emailid,noOfTokens);
-			}
+			basicDBObject.append("_id", emailid).append("name", name).append("amount", amount).append("paymentplan", paymentplan).append("amount", amount).append("tokens", tokens);
+			collection.insert(basicDBObject);
+			
+			
 			String tokensString = String.join("\n ", tokens);
 			return tokensString;
 		}	
@@ -93,17 +83,10 @@ private List<String> generateTokens(String emailid, int noOfTokens) {
 		// TODO Auto-generated method stub
 		System.out.println("no of tokens =" + noOfTokens);
 		List<String> tokens = new ArrayList<String>();
-		MongoClient mongoclient = new MongoClient("localhost",27018);
-		DB db = mongoclient.getDB("SudokuServer");
-		DBCollection collection = (DBCollection) db.getCollection("userTokens");
-		BasicDBObject basicDBObject = new BasicDBObject();
-		basicDBObject.append("_id", emailid);
 		for(int i=0;i<noOfTokens;i++) {
 			String token = Integer.toString(i) + emailid;
 			tokens.add(token);
 		}
-		basicDBObject.append("tokens", tokens);
-		collection.insert(basicDBObject);
 		return tokens;
 }
 

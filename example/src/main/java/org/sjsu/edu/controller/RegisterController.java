@@ -29,7 +29,6 @@ public class RegisterController {
 		return "You're not registered, can't update";
 	}
 	
-	
 	@RequestMapping(value = "/delete/{objInstanceId}/{endPoint}",method={RequestMethod.DELETE})
 	public String deleteRegisterDeviceInfo(@PathVariable String objInstanceId, @PathVariable String endPoint) throws Exception {
 		String output = RegisterHelperService.CheckIfRegistered(objInstanceId);	
