@@ -2,7 +2,9 @@ package org.sjsu.edu.controller;
 
 import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -11,9 +13,10 @@ import com.mongodb.DB;
 import com.mongodb.DBCollection;
 import com.mongodb.DBCursor;
 import com.mongodb.MongoClient;
+import com.mongodb.util.JSON;
 
 @RestController
-@RequestMapping("/bootstrap")
+@RequestMapping("/bootStrap")
 public class BootstrapController {
 
 	static JSONObject jsonObj;
@@ -26,7 +29,7 @@ public class BootstrapController {
 	}
 	
 	private String putLWM2MServerInfo(String endPointClientName) throws JSONException {
-		DB db = mongoClient.getDB("Server");
+		DB db = mongoClient.getDB("Serverdb");
 		collection = db.getCollection("ObjectInstanceID");
 		cursor = collection.find();
 		int objId = 0;
@@ -67,10 +70,10 @@ public class BootstrapController {
 	}
 	
 	private String putLWM2MSecurityInfo(String endPointClientName) {
-		DB db = mongoClient.getDB("Server");
+		DB db = mongoClient.getDB("Serverdb");
 		DBCollection collection = db.getCollection("LWM2MSecurityObject");
 		BasicDBObject documentSecurity = new BasicDBObject();
-		documentSecurity.put("Client Name",endPointClientName);
+		documentSecurity.put("_id",endPointClientName);
 		documentSecurity.append("Object Id", "0");
 		documentSecurity.append("LWM2M Server URI", "http://localhost:8080/register/");	
 		documentSecurity.append("Bootstrap Server", "False");
@@ -84,10 +87,11 @@ public class BootstrapController {
 		return LWM2MSecurityInfo;
 	}
 	
-	@RequestMapping("")
-	public String bootstrap(@RequestParam(value="clientname") String endPointClientName) throws Exception {
+	@RequestMapping(value="",method=RequestMethod.POST)
+	public String bootstrap(@RequestBody String endPointClientName) throws Exception {
+	String endpoint = new JSONObject(endPointClientName).getString("endpoint");
 	mongoClient = getMongoClient(27018);
-	String lwm2mSecurityServer = putLWM2MSecurityInfo(endPointClientName)+" & \n"+  putLWM2MServerInfo(endPointClientName) + "\n";
+	String lwm2mSecurityServer = putLWM2MSecurityInfo(endpoint)+"\n"+  putLWM2MServerInfo(endpoint) + "\n";
 	return lwm2mSecurityServer;	
 	}
 }

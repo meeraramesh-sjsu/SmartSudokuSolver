@@ -49,7 +49,7 @@ public class RegisterHelperService {
 		collection1.updateMulti(whereQuery, update);
 	}
 	
-	public static void saveToRegisteredDevices(String endpoint , String reginfo) throws UnknownHostException, JSONException{
+	public static void saveToRegisteredDevices(String reginfo) throws UnknownHostException, JSONException{
 		System.out.println("New device from server" + reginfo);
 		MongoClient mongoClient = new MongoClient( "localhost" , 27018 );
 		DB db = mongoClient.getDB( "Serverdb" );
@@ -60,8 +60,8 @@ public class RegisterHelperService {
 		jsonObj = new JSONObject(reginfo);
 		String a1 = jsonObj.getString("_id");		
 		
-		document.append("Device Endpoint Name", endpoint);// get server object id
-		document.append("Object Instance ID", a1);
+		document.append("Device Endpoint Name", new JSONObject(reginfo).getString("endpoint"));// get server object id
+		document.append("_id", a1);
 		document.append("Status", "Registered");
 		document.append("Device Type", jsonObj.getString("type"));
 		collection2.insert(document);
@@ -77,7 +77,7 @@ public class RegisterHelperService {
 		DBCollection collection2 = db.getCollection("RegisteredDevices");
 		
 		BasicDBObject whereQuery = new BasicDBObject();
-		whereQuery.put("Object Instance Id", objectInstanceId);							// check the specific id
+		whereQuery.put("_id", objectInstanceId);							// check the specific id
 		DBCursor cursor = collection2.find(whereQuery);		
 		while (cursor.hasNext()) {
 			m = cursor.next().toString();			
@@ -108,10 +108,6 @@ public class RegisterHelperService {
 		DBCollection collection2 = db.getCollection("RegisteredDevices");			// 3rd collection
 		BasicDBObject whereQuery2 = new BasicDBObject().append("_id", objid);
 		collection2.remove(whereQuery2);
-		
-		DBCollection collection3 = db.getCollection("DeviceContact");				// 4th collection
-		BasicDBObject whereQuery3 = new BasicDBObject().append("_id", endpoint);
-		collection3.remove(whereQuery3);
 	}
 
 	public static String getClientEndpointName(String objectInstanceId) throws UnknownHostException, JSONException{
@@ -121,7 +117,7 @@ public class RegisterHelperService {
 		DBCollection collection2 = db.getCollection("RegisteredDevices");
 		
 		BasicDBObject whereQuery = new BasicDBObject();
-		whereQuery.put("Object Instance Id", objectInstanceId);							// check the specific id
+		whereQuery.put("_id", objectInstanceId);							// check the specific id
 		DBCursor cursor = collection2.find(whereQuery);		
 		String o = null;
 		while (cursor.hasNext()) {
@@ -180,7 +176,7 @@ public static void RegistrationUpdate(String endpoint , String objid) throws Unk
 		BasicDBObject whereQuery = new BasicDBObject().append("Device Endpoint Name", endpoint);
 		
 		BasicDBObject document = new BasicDBObject();
-		document.append("Object Instance Id", objid);					// update corresponding object instance id
+		document.append("_id", objid);					// update corresponding object instance id
 		DBObject update = new BasicDBObject("$set", document);
 		collection2.updateMulti(whereQuery, update);		
 	}

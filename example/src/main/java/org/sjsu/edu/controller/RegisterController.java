@@ -1,5 +1,6 @@
 package org.sjsu.edu.controller;
 
+import org.codehaus.jettison.json.JSONObject;
 import org.sjsu.edu.service.RegisterHelperService;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -11,17 +12,17 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/register")
 public class RegisterController {
 
-	@RequestMapping(value="/save/{objInstanceId}",method=RequestMethod.POST)
-	public String saveRegisterDeviceInfo(@PathVariable String objInstanceId, @RequestBody String reginfo) throws Exception {
+	@RequestMapping(value="/save",method=RequestMethod.POST)
+	public String saveRegisterDeviceInfo(@RequestBody String reginfo) throws Exception {
 		RegisterHelperService.saveRegisterInfoToLWM2MServer(reginfo);						
 		// new registration
-		RegisterHelperService.saveToRegisteredDevices(objInstanceId, reginfo);		
+		RegisterHelperService.saveToRegisteredDevices(reginfo);		
 		return "Successfully Registered";	
 	}
 
-	@RequestMapping(value="/update/{objInstanceId}",method=RequestMethod.PUT)
-	public String updateRegisterDeviceInfo(@PathVariable String objInstanceId, @RequestBody String updateinfo) throws Exception {
-		String output = RegisterHelperService.CheckIfRegistered(objInstanceId);	
+	@RequestMapping(value="/update",method=RequestMethod.PUT)
+	public String updateRegisterDeviceInfo(@RequestBody String updateinfo) throws Exception {
+		String output = RegisterHelperService.CheckIfRegistered(new JSONObject(updateinfo).getString("_id"));	
 		if(output.equalsIgnoreCase("Registered")){
 			RegisterHelperService.updateParameters(updateinfo);
 			return "Successfully Updated Registeration information";	
@@ -29,11 +30,11 @@ public class RegisterController {
 		return "You're not registered, can't update";
 	}
 	
-	@RequestMapping(value = "/delete/{objInstanceId}/{endPoint}",method={RequestMethod.DELETE})
-	public String deleteRegisterDeviceInfo(@PathVariable String objInstanceId, @PathVariable String endPoint) throws Exception {
-		String output = RegisterHelperService.CheckIfRegistered(objInstanceId);	
+	@RequestMapping(value = "/delete/{objId}/{endpoint}",method=RequestMethod.DELETE)
+	public String deleteRegisterDeviceInfo(@PathVariable String objId, @PathVariable String endpoint) throws Exception {
+		String output = RegisterHelperService.CheckIfRegistered(objId);	
 		if(output.equalsIgnoreCase("Registered")){
-			RegisterHelperService.DeregisterDevice(objInstanceId , endPoint);
+			RegisterHelperService.DeregisterDevice(objId , endpoint);
 			return "Successfully De-Registered";
 		}
 		return "You're not registered, can't delete";
