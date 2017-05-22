@@ -1,5 +1,6 @@
 package org.sjsu.edu.device.controller;
 
+import org.codehaus.jettison.json.JSONArray;
 import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
 import org.quartz.InterruptableJob;
@@ -26,7 +27,7 @@ public class NotifyJob implements Job
 	private JSONObject request;
 	private HttpHeaders headers;
 	private HttpEntity<String> entity;
-	private RestTemplate restTemplate;
+	private RestTemplate restTemplate = new RestTemplate();
 
 	public void execute(JobExecutionContext context) throws JobExecutionException {
 		SchedulerContext schedulerContext;
@@ -42,13 +43,13 @@ public class NotifyJob implements Job
 			DBCollection collection = (DBCollection) db.getCollection("userTokens");
 
 			BasicDBObject whereQuery = new BasicDBObject();
-			whereQuery.put("emailid", emailId);
+			whereQuery.put("_id", emailId);
 			DBCursor dbCursor = collection.find(whereQuery);
 			int numOfTokens=0;
-			if(dbCursor.size()!=0)
-			while(dbCursor.hasNext()) {
-				numOfTokens++;
-			}
+			JSONArray tokens = new JSONArray();
+			if(dbCursor.size()!=0) {
+			tokens = new JSONObject(dbCursor.next().toString()).getJSONArray("tokens");
+			numOfTokens = tokens.length();
 			if(numOfTokens <= Integer.parseInt(lessThan)) {
 				url = "http://localhost:8080/sudoku/notify/" + emailId;
 				
@@ -64,8 +65,7 @@ public class NotifyJob implements Job
 				restTemplate.postForObject(url, entity, String.class);
 				System.out.println("Sent notification");
 			}
-				
-			System.out.println("Hello Quartz!");
+			}
 		} catch (SchedulerException | JSONException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();

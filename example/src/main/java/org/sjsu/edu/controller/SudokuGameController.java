@@ -84,7 +84,7 @@ private List<String> generateTokens(String emailid, int noOfTokens) {
 		System.out.println("no of tokens =" + noOfTokens);
 		List<String> tokens = new ArrayList<String>();
 		for(int i=0;i<noOfTokens;i++) {
-			String token = Integer.toString(i) + emailid;
+			String token = Integer.toString(i) + emailid.charAt(0);
 			tokens.add(token);
 		}
 		return tokens;
@@ -99,7 +99,7 @@ public String getAllAvailableTokens(@RequestBody String emailid) throws JSONExce
 		DBCollection collection = (DBCollection) db.getCollection("userTokens");
 
 		BasicDBObject whereQuery = new BasicDBObject();
-		whereQuery.put("emailid", jsonObject.getString("emailid"));
+		whereQuery.put("_id", jsonObject.getString("emailid"));
 		DBCursor dbCursor = collection.find(whereQuery);
 		JSONObject jsonObj;
 		String rowVal;
@@ -107,12 +107,12 @@ public String getAllAvailableTokens(@RequestBody String emailid) throws JSONExce
 		while(dbCursor.hasNext()) {
 			rowVal = dbCursor.next().toString();
 			jsonObj = new JSONObject(rowVal);
-			System.out.println(jsonObj.get("token") + " " + jsonObj.getBoolean("available"));
-			boolean available = jsonObj.getBoolean("available");		
-			if(available==true) availableTokens.add(jsonObj.getString("token"));
+			JSONArray jsonArray =  jsonObj.getJSONArray("tokens");
+			for(int i=0;i<jsonArray.length();i++) {
+				availableTokens.add(jsonArray.getString(i));
+			}
 		}
-
-		String tokenString = String.join("\n ", availableTokens);
+		String tokenString = String.join("\n", availableTokens);
 		return tokenString;
 	}
 

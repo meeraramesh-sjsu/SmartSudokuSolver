@@ -21,7 +21,7 @@ public class DeviceManagementNotify {
 	private static JSONObject request;
 	private static RestTemplate restTemplate = new RestTemplate();
 
-	public static String Notify(String emailid, String objInstance, String lessThan) throws JSONException {
+	public static String Notify(String emailid, String objInstance, String lessThan, boolean notify) throws JSONException {
 		System.out.println("In New thread");
 		MongoClient mongoclient = new MongoClient("localhost", 27018);
 		DB db = mongoclient.getDB("SudokuServer");

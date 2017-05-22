@@ -323,7 +323,7 @@ public static void writeAttribute(String objectInstanceId, String minPeriod, Str
 	DB db = mongoClient.getDB( "rasberryPiDB" );
 	DBCollection collection1 = db.getCollection("ObservationTableStats");
 
-	BasicDBObject newDocument = new BasicDBObject().append("_id", objectInstanceId).append("minPeriod", minPeriod).append("maxPeriod", maxPeriod).append("greaterThan", greaterThan);
+	BasicDBObject newDocument = new BasicDBObject().append("_id", objectInstanceId).append("minPeriod", minPeriod).append("maxPeriod", maxPeriod).append("lessThan", greaterThan);
 	collection1.insert(newDocument);
 }
 
@@ -338,9 +338,13 @@ public static void startOrStopObservation(String objectInstanceId, String obsSta
 		BasicDBObject whereQuery = new BasicDBObject();
 		whereQuery.put("_id", objectInstanceId);							// check the specific id
 		DBCursor cursor = collection.find(whereQuery);		
-	
-		String lessThan = new JSONObject(cursor.next().toString()).getString("lessThan");
-		String minPeriod = new JSONObject(cursor.next().toString()).getString("minPeriod");
+		DBObject present = cursor.next();
+		if(present==null) {
+			System.out.println("Incorrect object instance id");
+			return;
+		}
+		String lessThan = new JSONObject(present.toString()).getString("lessThan");
+		String minPeriod = new JSONObject(present.toString()).getString("minPeriod");
 		BasicDBObject insertDC = new BasicDBObject().append("_id", objectInstanceId).append("status", obsStatus)
 								.append("Date", new Date().toString());							// check the specific id
 		
@@ -365,7 +369,7 @@ public static void startOrStopObservation(String objectInstanceId, String obsSta
 				scheduler.start();
 				scheduler.scheduleJob(job, trigger);
 
-		 notifyServer(objectInstanceId, emailId, lessThan);
+		 //notifyServer(objectInstanceId, emailId, lessThan);
 	}
 	else {
 	scheduler.deleteJob(JobKey.jobKey("dummyJobName", "group1"));
@@ -378,6 +382,7 @@ public static void startOrStopObservation(String objectInstanceId, String obsSta
 	
 	if(obsStatus.equalsIgnoreCase("stop")) {
 		exit = true;
+		scheduler.shutdown();
 		System.out.println("Stopped sending notification, stopped the thread");
 	}
 	collection1.update(whereQuery, update);
@@ -385,7 +390,7 @@ public static void startOrStopObservation(String objectInstanceId, String obsSta
 }
 
 
-public static void notifyServer(final String objectInstanceId, final String emailid, final String lessThan) {
+/*public static void notifyServer(final String objectInstanceId, final String emailid, final String lessThan) {
 	System.out.println("New thread started which will send the notification to server");
 	Thread t = new Thread(new Runnable() {
 		
@@ -393,7 +398,7 @@ public static void notifyServer(final String objectInstanceId, final String emai
 		public void run() {
 			// TODO Auto-generated method stub
 			try {
-				DeviceManagementNotify.Notify(emailid, objectInstanceId, lessThan);
+				DeviceManagementNotify.Notify(emailid, objectInstanceId, lessThan, true);
 			} catch (JSONException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
@@ -402,11 +407,12 @@ public static void notifyServer(final String objectInstanceId, final String emai
 		}
 		
 		public void stop(){
+			DeviceManagementNotify.Notify(emailid, objectInstanceId, lessThan, false);
 	        exit = true;
 	    }
 		
 	}); 
 	t.start();
-}
+}*/
 
 };
